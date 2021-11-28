@@ -19,13 +19,26 @@ class _MainMenuState extends State<MainMenu> {
       ),
       body: Center(
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            ElevatedButton(onPressed: () {}, child: const Text('Connect bluetooth')),
-            ElevatedButton(
-                onPressed: () {
-
-                },
-                child: const Text('Refresh')),
+            SizedBox(
+              width: 150,
+              child: ElevatedButton(
+                onPressed: () {},
+                child: const Text('Connect bluetooth'),
+                style: ElevatedButton.styleFrom(elevation: 5),
+              ),
+            ),
+            SizedBox(
+              width: 150,
+              child: ElevatedButton(
+                onPressed: () {},
+                child: const Text('Refresh'),
+                style: ElevatedButton.styleFrom(
+                    elevation: 5,
+                ),
+              ),
+            ),
           ],
         ),
       ),

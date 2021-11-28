@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "691888751341",
+    "project_id": "carcontrol-332520",
+    "storage_bucket": "carcontrol-332520.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:691888751341:android:b2cd2488de2195c9ddc2e4",
+        "android_client_info": {
+          "package_name": "com.example.car_control"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "691888751341-eu4jn780398rrmdlau825kvv8dh3aktb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.car_control",
+            "certificate_hash": "3d94dd141e72112541eb30d22c66f0153940a531"
+          }
+        },
+        {
+          "client_id": "691888751341-nvqnq3197f6l2fpbbuo2pc7ftnv4l9f4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCB_Ks5GHIkdG-V9iBLM5sD4NOiPYnRWe4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "691888751341-nvqnq3197f6l2fpbbuo2pc7ftnv4l9f4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
