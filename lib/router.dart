@@ -2,6 +2,8 @@ import 'package:car_control/routes/door_remote.dart';
 import 'package:car_control/routes/geo_location.dart';
 import 'package:car_control/routes/main_menu.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
 
 class NavRouter extends StatefulWidget {
   const NavRouter({Key? key}) : super(key: key);
@@ -19,6 +21,7 @@ class _NavRouterState extends State<NavRouter> {
   ];
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
         body: _children[_currentIndex],
         bottomNavigationBar: BottomNavigationBar(

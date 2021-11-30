@@ -36,11 +36,12 @@ dependencies:
   cupertino_icons: ^1.0.3
   google_maps_flutter: ^2.1.0
   permission: ^0.1.7
-  firebase_core: ^1.10.0
   provider: ^5.0.0
-  cloud_firestore: ^1.0.5
+  cloud_firestore: ^2.5.1
+  firebase_core: ^1.6.0
   uuid: ^3.0.4
   async: ^2.5.0
+  location: ^4.3.0
 
 dev_dependencies:
   flutter_test:

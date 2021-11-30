@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
@@ -9,75 +11,72 @@ class GeoLocation extends StatefulWidget {
   _GeoLocationState createState() => _GeoLocationState();
 }
 
-//50.2844313,18.731742,17z
 class _GeoLocationState extends State<GeoLocation> {
-  List<Marker> marker=[];
-  Completer<GoogleMapController> _controller = Completer();
-  double lat = 50.2844673;
-  double lng = 18.7337511;
-
-  static const CameraPosition _initialLocation = CameraPosition(
-    target: LatLng(50.2844313, 18.731742),
-    zoom: 18,
-  );
-
-  static const CameraPosition _kLake = CameraPosition(
-      target: LatLng(50.2844673, 18.7337511),
-      zoom: 18);
-
-  @override
-  void initState() {
-    marker.add(Marker(
-      markerId: MarkerId('Car Location'),
-      draggable: false,
-      position: LatLng(50.2844313, 18.731742),
-      onTap: (){
-        print("Marker tapped");
-      }
-
-    ));
-    super.initState();
-  }
+  late GoogleMapController _controller;
+  bool _added = false;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('Geo Map Screen'),
-        actions: [
-          IconButton(onPressed: _refreshLocation, icon: Icon(Icons.refresh))
-        ],
-      ),
-      body: Center(
-        child: GoogleMap(
-          //markers: ,
-          mapType: MapType.hybrid,
-          initialCameraPosition: _initialLocation,
-          onMapCreated: (GoogleMapController controller) {
-            _controller.complete(controller);
-          },
-          markers: Set.from(marker),
+        appBar: AppBar(
+          centerTitle: true,
+          title: const Text('Geo Map Screen'),
         ),
-      ),
-
-    );
+        body: StreamBuilder(
+          stream:
+              FirebaseFirestore.instance.collection('coordinates').snapshots(),
+          builder:
+              (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+            if(_added){
+              updateMap(snapshot);
+            }
+            if (!snapshot.hasData) {
+              return Center(
+                child: Column(
+                  children: const [
+                    Text('Loading...'),
+                    CircularProgressIndicator()
+                  ],
+                ),
+              );
+            }
+            return GoogleMap(
+              mapType: MapType.terrain,
+              markers: {
+                Marker(
+                    position: LatLng(
+                        snapshot.data!.docs.singleWhere(
+                            (element) => element.id == 'coords')['lat'],
+                        snapshot.data!.docs.singleWhere(
+                            (element) => element.id == 'coords')['lng']),
+                    markerId: const MarkerId('Car Location'))
+              },
+              initialCameraPosition: CameraPosition(
+                  target: LatLng(
+                      snapshot.data!.docs.singleWhere(
+                          (element) => element.id == 'coords')['lat'],
+                      snapshot.data!.docs.singleWhere(
+                          (element) => element.id == 'coords')['lng']),
+                  zoom: 18),
+              onMapCreated: (GoogleMapController controller) async {
+                setState(() {
+                  _controller = controller;
+                  _added = true;
+                });
+              },
+            );
+          },
+        ));
   }
 
-  Future<void> _refreshLocation() async {
-    setState(() {
-      marker.clear();
-      marker.add(Marker(
-          markerId: MarkerId('Car Location'),
-          draggable: false,
-          position: LatLng(lat, lng),
-          onTap: (){
-            print("New marker tapped");
-          }
-
-      ));
-    });
-    final GoogleMapController controller = await _controller.future;
-    controller.animateCamera(CameraUpdate.newCameraPosition(_kLake));
+  Future<void> updateMap(AsyncSnapshot<QuerySnapshot> snapshot) async {
+    await _controller.animateCamera(CameraUpdate.newCameraPosition(
+        CameraPosition(
+            target: LatLng(
+                snapshot.data!.docs
+                    .singleWhere((element) => element.id == 'coords')['lat'],
+                snapshot.data!.docs
+                    .singleWhere((element) => element.id == 'coords')['lng']),
+            zoom: 18)));
   }
 }
