@@ -15,7 +15,7 @@ class NavRouter extends StatefulWidget {
 class _NavRouterState extends State<NavRouter> {
   int _currentIndex = 0;
   final List _children = [
-    const MainMenu(),
+    //const MainMenu(),
     const GeoLocation(),
     const DoorRemote()
   ];
@@ -28,10 +28,10 @@ class _NavRouterState extends State<NavRouter> {
           onTap: onTabTapped,
           currentIndex: _currentIndex,
           items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "Home",
-            ),
+            // BottomNavigationBarItem(
+            //   icon: Icon(Icons.home),
+            //   label: "Home",
+            // ),
             BottomNavigationBarItem(
               icon: Icon(Icons.map),
               label: "Geo Map",

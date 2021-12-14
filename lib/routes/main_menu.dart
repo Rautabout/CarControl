@@ -1,5 +1,3 @@
-import 'package:car_control/routes/door_remote.dart';
-import 'package:car_control/routes/geo_location.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
