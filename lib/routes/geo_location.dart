@@ -5,14 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class GeoLocation extends StatefulWidget {
-  const GeoLocation({Key? key}) : super(key: key);
 
   @override
   _GeoLocationState createState() => _GeoLocationState();
 }
 
 class _GeoLocationState extends State<GeoLocation> {
-  late GoogleMapController _controller;
+  GoogleMapController _controller;
   bool _added = false;
 
   @override
@@ -45,17 +44,17 @@ class _GeoLocationState extends State<GeoLocation> {
               markers: {
                 Marker(
                     position: LatLng(
-                        snapshot.data!.docs.singleWhere(
+                        snapshot.data.docs.singleWhere(
                             (element) => element.id == 'coords')['lat'],
-                        snapshot.data!.docs.singleWhere(
+                        snapshot.data.docs.singleWhere(
                             (element) => element.id == 'coords')['lng']),
                     markerId: const MarkerId('Car Location'))
               },
               initialCameraPosition: CameraPosition(
                   target: LatLng(
-                      snapshot.data!.docs.singleWhere(
+                      snapshot.data.docs.singleWhere(
                           (element) => element.id == 'coords')['lat'],
-                      snapshot.data!.docs.singleWhere(
+                      snapshot.data.docs.singleWhere(
                           (element) => element.id == 'coords')['lng']),
                   zoom: 18),
               onMapCreated: (GoogleMapController controller) async {
@@ -73,9 +72,9 @@ class _GeoLocationState extends State<GeoLocation> {
     await _controller.animateCamera(CameraUpdate.newCameraPosition(
         CameraPosition(
             target: LatLng(
-                snapshot.data!.docs
+                snapshot.data.docs
                     .singleWhere((element) => element.id == 'coords')['lat'],
-                snapshot.data!.docs
+                snapshot.data.docs
                     .singleWhere((element) => element.id == 'coords')['lng']),
             zoom: 18)));
   }
