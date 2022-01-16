@@ -1,16 +1,45 @@
-import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/foundation.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:vehicle_control/model/markers.dart';
 
 class GeoLocation extends StatefulWidget {
-
   @override
   _GeoLocationState createState() => _GeoLocationState();
 }
 
 class _GeoLocationState extends State<GeoLocation> {
+  final _database = FirebaseDatabase.instance.reference();
+  final _firebaseDatabase =
+      FirebaseFirestore.instance.collection('coordinates');
+
+  @override
+  void initState() {
+    super.initState();
+    _activateListeners();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  void _activateListeners() {
+    _database.child('coordinates/latitude').onValue.listen((event) {
+      final double tempLat = event.snapshot.value;
+      setState(() {
+        _firebaseDatabase.doc('coords').update({'lat': tempLat});
+      });
+    });
+    _database.child('coordinates/longitude').onValue.listen((event) {
+      final double tempLng = event.snapshot.value;
+      setState(() {
+        _firebaseDatabase.doc('coords').update({'lng': tempLng});
+      });
+    });
+  }
+
   GoogleMapController _controller;
   bool _added = false;
 
@@ -20,13 +49,14 @@ class _GeoLocationState extends State<GeoLocation> {
         appBar: AppBar(
           centerTitle: true,
           title: const Text('Geo Map Screen'),
+          //title: (Text(latitude + longitude)),
         ),
         body: StreamBuilder(
           stream:
               FirebaseFirestore.instance.collection('coordinates').snapshots(),
           builder:
               (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-            if(_added){
+            if (_added) {
               updateMap(snapshot);
             }
             if (!snapshot.hasData) {
