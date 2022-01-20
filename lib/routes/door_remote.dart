@@ -1,10 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
-
 
 class DoorRemote extends StatefulWidget {
   @override
@@ -46,14 +44,10 @@ class _DoorRemoteState extends State<DoorRemote> {
       });
     });
 
-    _deviceState = 0; // neutral
+    _deviceState = 0;
 
-    // If the bluetooth of the device is not enabled,
-    // then request permission to turn on bluetooth
-    // as the app starts up
     enableBluetooth();
 
-    // Listen for further state changes
     FlutterBluetoothSerial.instance
         .onStateChanged()
         .listen((BluetoothState state) {
@@ -69,7 +63,6 @@ class _DoorRemoteState extends State<DoorRemote> {
 
   @override
   void dispose() {
-    // Avoid memory leak and disconnect
     if (isConnected) {
       isDisconnecting = true;
       connection.dispose();
@@ -132,7 +125,7 @@ class _DoorRemoteState extends State<DoorRemote> {
           backgroundColor: Colors.blueGrey,
           actions: <Widget>[
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.refresh,
                 color: Colors.white,
               ),
@@ -147,14 +140,14 @@ class _DoorRemoteState extends State<DoorRemote> {
             ),
           ],
         ),
-        body: Container(
+        body: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.max,
             children: <Widget>[
               Visibility(
                 visible: _isButtonUnavailable &&
                     _bluetoothState == BluetoothState.STATE_ON,
-                child: LinearProgressIndicator(
+                child: const LinearProgressIndicator(
                   backgroundColor: Colors.yellow,
                   valueColor: AlwaysStoppedAnimation<Color>(Colors.red),
                 ),
@@ -164,7 +157,7 @@ class _DoorRemoteState extends State<DoorRemote> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: <Widget>[
-                    const Expanded(
+                    const SizedBox(
                       child: Text(
                         'Enable Bluetooth',
                         style: TextStyle(
@@ -173,6 +166,7 @@ class _DoorRemoteState extends State<DoorRemote> {
                         ),
                       ),
                     ),
+                    const Padding(padding: EdgeInsets.fromLTRB(80, 0, 80, 0)),
                     Switch(
                       activeColor: Colors.blueGrey,
                       value: _bluetoothState.isEnabled,
@@ -207,12 +201,23 @@ class _DoorRemoteState extends State<DoorRemote> {
                   Column(
                     children: <Widget>[
                       const Padding(
-                        padding: EdgeInsets.only(top: 10),
+                        padding: EdgeInsets.only(top: 5),
                         child: Text(
                           "PAIRED DEVICES",
                           style:
                               TextStyle(fontSize: 24, color: Colors.blueGrey),
                           textAlign: TextAlign.center,
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Text(
+                          "NOTE: To succesfully set up the connection, select VehicleControl device",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.red,
+                          ),
                         ),
                       ),
                       Padding(
@@ -247,68 +252,117 @@ class _DoorRemoteState extends State<DoorRemote> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.all(16.0),
+                        padding: const EdgeInsets.all(2),
                         child: Card(
                           shape: RoundedRectangleBorder(
-                            side: const BorderSide(
-                              width: 3,
-                            ),
-                            borderRadius: BorderRadius.circular(4.0),
-                          ),
-                          elevation: _deviceState == 0 ? 4 : 0,
-                          child: Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Row(
-                              children: <Widget>[
-                                const Expanded(
-                                  child: Text(
-                                    "DEVICE 1",
+                              side: const BorderSide(width: 3),
+                              borderRadius: BorderRadius.circular(10)),
+                          child: Column(
+                            children: <Widget>[
+                              Container(
+                                width: 600,
+                                height: 10,
+                              ),
+                              const Text('Doors',
+                                  style: TextStyle(
+                                    fontSize: 32,
+                                  )),
+                              Container(
+                                width: 600,
+                                height: 10,
+                              ),
+                              ElevatedButton(
+                                style: ButtonStyle(
+                                    backgroundColor:
+                                        MaterialStateProperty.resolveWith<
+                                            Color>((Set<MaterialState> states) {
+                                      if (_connected == false) {
+                                        return Colors.blueGrey;
+                                      } else if (isOpen == false &&
+                                          _connected == true) {
+                                        return const Color.fromARGB(
+                                            255, 34, 226, 0);
+                                      } else {
+                                        return const Color.fromARGB(
+                                            255, 64, 125, 64);
+                                      }
+                                    }),
+                                    fixedSize: MaterialStateProperty.all(
+                                        const Size(300, 70)),
+                                    shape: MaterialStateProperty.all(
+                                        const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(15),
+                                          topRight: Radius.circular(15),
+                                          bottomLeft: Radius.circular(0),
+                                          bottomRight: Radius.circular(0)),
+                                    ))),
+                                onPressed: () {
+                                  if (isOpen == true && _connected == true) {
+                                    show("Doors already open");
+                                  } else if (isOpen == false &&
+                                      _connected == true) {
+                                    _sendOnMessageToBluetooth();
+                                    isOpen = true;
+                                  } else {
+                                    show("Device not connected");
+                                  }
+                                },
+                                child: const Text("Open",
                                     style: TextStyle(
                                       fontSize: 20,
-                                    ),
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    if (isOpen == true && _connected == true) {
-                                      show("Doors already open");
-                                    } else if (isOpen == false &&
-                                        _connected == true) {
-                                      _sendOnMessageToBluetooth();
-                                      isOpen=true;
-
-                                    } else {
-                                      null;
-                                    }
-                                  },
-                                  // onPressed: _connected
-                                  //     ? _sendOnMessageToBluetooth
-                                  //     : null,
-                                  child: Text("ON"),
-                                  
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    if (isOpen == false && _connected == true) {
-                                      show("Doors already closed");
-                                    } else if (isOpen == true &&
-                                        _connected == true) {
-                                      _sendOffMessageToBluetooth();
-                                      isOpen=false;
-                                    } else {
-                                      null;
-                                    }
-                                  },
-                                  //_connected
-                                  // ? _sendOffMessageToBluetooth
-                                  //: null,
-                                  child: Text("OFF"),
-                                ),
-                              ],
-                            ),
+                                    )),
+                              ),
+                              ElevatedButton(
+                                style: ButtonStyle(
+                                    backgroundColor:
+                                        MaterialStateProperty.resolveWith<
+                                            Color>((Set<MaterialState> states) {
+                                      if (_connected == false) {
+                                        return Colors.blueGrey;
+                                      } else if (isOpen == true &&
+                                          _connected == true) {
+                                        return const Color.fromARGB(
+                                            255, 241, 0, 0);
+                                      } else {
+                                        return const Color.fromARGB(
+                                            255, 109, 0, 0);
+                                      }
+                                    }),
+                                    fixedSize: MaterialStateProperty.all(
+                                        const Size(300, 70)),
+                                    shape: MaterialStateProperty.all(
+                                        const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.only(
+                                          topLeft: Radius.circular(0),
+                                          topRight: Radius.circular(0),
+                                          bottomLeft: Radius.circular(15),
+                                          bottomRight: Radius.circular(15)),
+                                    ))),
+                                onPressed: () {
+                                  if (isOpen == false && _connected == true) {
+                                    show("Doors already closed");
+                                  } else if (isOpen == true &&
+                                      _connected == true) {
+                                    _sendOffMessageToBluetooth();
+                                    isOpen = false;
+                                  } else {
+                                    show("Device not connected");
+                                  }
+                                },
+                                child: const Text("Close",
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                    )),
+                              ),
+                              Container(
+                                width: 600,
+                                height: 20,
+                              )
+                            ],
                           ),
                         ),
-                      ),
+                      )
                     ],
                   ),
                   Container(
@@ -316,7 +370,7 @@ class _DoorRemoteState extends State<DoorRemote> {
                   ),
                 ],
               ),
-              Expanded(
+              SizedBox(
                 child: Padding(
                   padding: const EdgeInsets.all(20),
                   child: Center(
@@ -331,11 +385,11 @@ class _DoorRemoteState extends State<DoorRemote> {
                             color: Colors.red,
                           ),
                         ),
-                        const SizedBox(height: 15),
+                        const SizedBox(height: 10),
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                               primary: Colors.blueGrey),
-                          child: Text("Bluetooth Settings"),
+                          child: const Text("Bluetooth Settings"),
                           onPressed: () {
                             FlutterBluetoothSerial.instance.openSettings();
                           },
@@ -377,62 +431,50 @@ class _DoorRemoteState extends State<DoorRemote> {
     });
     if (_device == null) {
       show('No device selected');
+      setState(() {
+        _isButtonUnavailable = false;
+      });
     } else {
       if (!isConnected) {
         await BluetoothConnection.toAddress(_device.address)
             .then((_connection) {
-          print('Connected to the device');
-          connection = _connection;
-          setState(() {
-            _connected = true;
-          });
+          if (_device.address == "7C:9E:BD:39:C9:12") {
+            print(_device.address);
+            print('Connected to the device');
+            show("Connected to the device");
+            connection = _connection;
+            setState(() {
+              _connected = true;
+            });
 
-          connection.input.listen(null).onDone(() {
-            if (isDisconnecting) {
-              print('Disconnecting locally!');
-            } else {
-              print('Disconnected remotely!');
-            }
-            if (this.mounted) {
-              setState(() {});
-            }
-          });
+            connection.input.listen(null).onDone(() {
+              if (isDisconnecting) {
+                show('Device disconnected locally');
+                print('Disconnecting locally!');
+                _connected = false;
+              } else {
+                show('Device disconnected remotely');
+                print('Disconnected remotely!');
+                _connected = false;
+              }
+              if (this.mounted) {
+                setState(() {});
+              }
+            });
+          } else {
+            show("Wrong device selected!");
+          }
         }).catchError((error) {
+          show("Cannot connect to the device");
           print('Cannot connect, exception occurred');
           print(error);
         });
-        show('Device connected');
+        //show('Device connected');
 
         setState(() => _isButtonUnavailable = false);
       }
     }
   }
-
-  // void _onDataReceived(Uint8List data) {
-  //   // Allocate buffer for parsed data
-  //   int backspacesCounter = 0;
-  //   data.forEach((byte) {
-  //     if (byte == 8 || byte == 127) {
-  //       backspacesCounter++;
-  //     }
-  //   });
-  //   Uint8List buffer = Uint8List(data.length - backspacesCounter);
-  //   int bufferIndex = buffer.length;
-
-  //   // Apply backspace control character
-  //   backspacesCounter = 0;
-  //   for (int i = data.length - 1; i >= 0; i--) {
-  //     if (data[i] == 8 || data[i] == 127) {
-  //       backspacesCounter++;
-  //     } else {
-  //       if (backspacesCounter > 0) {
-  //         backspacesCounter--;
-  //       } else {
-  //         buffer[--bufferIndex] = data[i];
-  //       }
-  //     }
-  //   }
-  // }
 
   // Method to disconnect bluetooth
   void _disconnect() async {
@@ -479,7 +521,7 @@ class _DoorRemoteState extends State<DoorRemote> {
     String message, {
     Duration duration: const Duration(seconds: 3),
   }) async {
-    await new Future.delayed(Duration(milliseconds: 100));
+    await Future.delayed(const Duration(milliseconds: 100));
     //ScaffoldMessenger.
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -489,13 +531,5 @@ class _DoorRemoteState extends State<DoorRemote> {
         duration: duration,
       ),
     );
-    // _scaffoldKey.currentState.showSnackBar(
-    //   SnackBar(
-    //     content: Text(
-    //       message,
-    //     ),
-    //     duration: duration,
-    //   ),
-    // );
   }
 }
