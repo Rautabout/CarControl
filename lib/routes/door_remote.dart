@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
@@ -420,7 +421,7 @@ class _DoorRemoteState extends State<DoorRemote> {
                       bluetoothPassword = passwordController.text;
                     });
                     _sendPasswordToBluetooth();
-                    print(bluetoothPassword);
+                    _getResponseFromBluetooth();
                     Navigator.pop(context);
                   },
                   child: const Text('Check'))
@@ -466,12 +467,6 @@ class _DoorRemoteState extends State<DoorRemote> {
               _connected = true;
             });
             _displayPasswordInputDialog(context).then((value) {
-              // if (passwordCorrection == true) {
-              //   return;
-              // } else {
-              //   show("Wrong password entered, device disconnecting");
-              //   _connected = false;
-              // }
 
               connection.input.listen(null).onDone(() {
                 if (isDisconnecting) {
@@ -514,12 +509,23 @@ class _DoorRemoteState extends State<DoorRemote> {
     }
   }
 
+  void _getResponseFromBluetooth(){
+    connection.input.listen((Uint8List data) {
+      if(utf8.decode(data)=='0'){
+        show("Wrong password entered, disconnecting!");
+        _disconnect();
+        return;
+      }
+      else{
+        show("Correct password entered");
+        return;
+      }
+    });
+  }
+
   void _sendPasswordToBluetooth() async {
     connection.output.add(utf8.encode(bluetoothPassword+"#\n"));
     await connection.output.allSent;
-    // setState(() {
-    //   _deviceState = 0;
-    // });
   }
 
   void _sendOnMessageToBluetooth() async {
