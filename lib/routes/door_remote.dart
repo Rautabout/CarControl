@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
 class DoorRemote extends StatefulWidget {
+  const DoorRemote({Key key}) : super(key: key);
+
   @override
   _DoorRemoteState createState() => _DoorRemoteState();
 }
@@ -246,7 +248,7 @@ class _DoorRemoteState extends State<DoorRemote> {
                               borderRadius: BorderRadius.circular(10)),
                           child: Column(
                             children: <Widget>[
-                              Container(
+                              const SizedBox(
                                 width: 600,
                                 height: 10,
                               ),
@@ -254,7 +256,7 @@ class _DoorRemoteState extends State<DoorRemote> {
                                   style: TextStyle(
                                     fontSize: 32,
                                   )),
-                              Container(
+                              const SizedBox(
                                 width: 600,
                                 height: 10,
                               ),
@@ -342,7 +344,7 @@ class _DoorRemoteState extends State<DoorRemote> {
                                       fontSize: 20,
                                     )),
                               ),
-                              Container(
+                              const SizedBox(
                                 width: 600,
                                 height: 20,
                               )
@@ -407,7 +409,6 @@ class _DoorRemoteState extends State<DoorRemote> {
               children: [
                 const Text("Enter bluetooth password:"),
                 TextField(
-
                   controller: passwordController,
                   decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
@@ -437,12 +438,12 @@ class _DoorRemoteState extends State<DoorRemote> {
         child: Text('NONE'),
       ));
     } else {
-      _devicesList.forEach((device) {
+      for (var device in _devicesList) {
         items.add(DropdownMenuItem(
           child: Text(device.name),
           value: device,
         ));
-      });
+      }
     }
     return items;
   }
@@ -467,7 +468,6 @@ class _DoorRemoteState extends State<DoorRemote> {
               _connected = true;
             });
             _displayPasswordInputDialog(context).then((value) {
-
               connection.input.listen(null).onDone(() {
                 if (isDisconnecting) {
                   show('Device disconnected locally');
@@ -476,7 +476,7 @@ class _DoorRemoteState extends State<DoorRemote> {
                   show('Device disconnected remotely');
                   _connected = false;
                 }
-                if (this.mounted) {
+                if (mounted) {
                   setState(() {});
                 }
               });
@@ -509,14 +509,13 @@ class _DoorRemoteState extends State<DoorRemote> {
     }
   }
 
-  void _getResponseFromBluetooth(){
+  void _getResponseFromBluetooth() {
     connection.input.listen((Uint8List data) {
-      if(utf8.decode(data)=='0'){
+      if (utf8.decode(data) == '0') {
         show("Wrong password entered, disconnecting!");
         _disconnect();
         return;
-      }
-      else{
+      } else {
         show("Correct password entered");
         return;
       }
@@ -524,12 +523,12 @@ class _DoorRemoteState extends State<DoorRemote> {
   }
 
   void _sendPasswordToBluetooth() async {
-    connection.output.add(utf8.encode(bluetoothPassword+"#\n"));
+    connection.output.add(utf8.encode(bluetoothPassword + "#\n"));
     await connection.output.allSent;
   }
 
   void _sendOnMessageToBluetooth() async {
-    connection.output.add(utf8.encode("1"+"\n"));
+    connection.output.add(utf8.encode("1\n"));
     await connection.output.allSent;
     show('Device Turned On');
     setState(() {
@@ -538,7 +537,7 @@ class _DoorRemoteState extends State<DoorRemote> {
   }
 
   void _sendOffMessageToBluetooth() async {
-    connection.output.add(utf8.encode("0"+"\n"));
+    connection.output.add(utf8.encode("0\n"));
     await connection.output.allSent;
     show('Device Turned Off');
     setState(() {
@@ -548,7 +547,7 @@ class _DoorRemoteState extends State<DoorRemote> {
 
   Future show(
     String message, {
-    Duration duration: const Duration(seconds: 3),
+    Duration duration = const Duration(seconds: 3),
   }) async {
     await Future.delayed(const Duration(milliseconds: 100));
     ScaffoldMessenger.of(context).showSnackBar(

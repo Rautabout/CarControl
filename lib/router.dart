@@ -6,6 +6,8 @@ import 'package:provider/provider.dart';
 
 
 class NavRouter extends StatefulWidget {
+  const NavRouter({Key key}) : super(key: key);
+
 
   @override
   _NavRouterState createState() => _NavRouterState();
@@ -15,8 +17,8 @@ class _NavRouterState extends State<NavRouter> {
   int _currentIndex = 0;
   final List _children = [
     //const MainMenu(),
-    DoorRemote(),
-    GeoLocation()
+    const DoorRemote(),
+    const GeoLocation()
 
   ];
   @override
