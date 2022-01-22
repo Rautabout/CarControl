@@ -10,24 +10,20 @@ class DoorRemote extends StatefulWidget {
 }
 
 class _DoorRemoteState extends State<DoorRemote> {
-  // Initializing the Bluetooth connection state to be unknown
   BluetoothState _bluetoothState = BluetoothState.UNKNOWN;
-  // Initializing a global key, as it would help us in showing a SnackBar later
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
-  // Get the instance of the Bluetooth
-  FlutterBluetoothSerial _bluetooth = FlutterBluetoothSerial.instance;
-  // Track the Bluetooth connection with the remote device
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final FlutterBluetoothSerial _bluetooth = FlutterBluetoothSerial.instance;
   BluetoothConnection connection;
   bool isOpen = false;
 
   int _deviceState;
+  String bluetoothPassword = "";
+  bool passwordCorrection = false;
 
   bool isDisconnecting = false;
 
-  // To track whether the device is still connected to Bluetooth
   bool get isConnected => connection != null && connection.isConnected;
 
-  // Define some variables, which will be required later
   List<BluetoothDevice> _devicesList = [];
   BluetoothDevice _device;
   bool _connected = false;
@@ -37,7 +33,6 @@ class _DoorRemoteState extends State<DoorRemote> {
   void initState() {
     super.initState();
 
-    // Get current state
     FlutterBluetoothSerial.instance.state.then((state) {
       setState(() {
         _bluetoothState = state;
@@ -72,13 +67,9 @@ class _DoorRemoteState extends State<DoorRemote> {
     super.dispose();
   }
 
-  // Request Bluetooth permission from the user
   Future<void> enableBluetooth() async {
-    // Retrieving the current Bluetooth state
     _bluetoothState = await FlutterBluetoothSerial.instance.state;
 
-    // If the bluetooth is off, then turn it on first
-    // and then retrieve the devices that are paired.
     if (_bluetoothState == BluetoothState.STATE_OFF) {
       await FlutterBluetoothSerial.instance.requestEnable();
       await getPairedDevices();
@@ -89,31 +80,24 @@ class _DoorRemoteState extends State<DoorRemote> {
     return false;
   }
 
-  // For retrieving and storing the paired devices
-  // in a list.
   Future<void> getPairedDevices() async {
     List<BluetoothDevice> devices = [];
 
-    // To get the list of paired devices
     try {
       devices = await _bluetooth.getBondedDevices();
     } on PlatformException {
-      print("Error");
+      show("Couldn't get the devices");
     }
 
-    // It is an error to call [setState] unless [mounted] is true.
     if (!mounted) {
       return;
     }
 
-    // Store the [devices] list in the [_devicesList] for accessing
-    // the list outside this class
     setState(() {
       _devicesList = devices;
     });
   }
 
-  // Now, its time to build the UI
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -130,9 +114,6 @@ class _DoorRemoteState extends State<DoorRemote> {
                 color: Colors.white,
               ),
               onPressed: () async {
-                // So, that when new devices are paired
-                // while the app is running, user can refresh
-                // the paired devices list.
                 await getPairedDevices().then((_) {
                   show('Device list refreshed');
                 });
@@ -240,11 +221,16 @@ class _DoorRemoteState extends State<DoorRemote> {
                             ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                   primary: Colors.blueGrey),
-                              onPressed: _isButtonUnavailable
-                                  ? null
-                                  : _connected
-                                      ? _disconnect
-                                      : _connect,
+                              onPressed: () {
+                                if (_isButtonUnavailable) {
+                                } else {
+                                  if (_connected) {
+                                    _disconnect();
+                                  } else {
+                                    _connect();
+                                  }
+                                }
+                              },
                               child:
                                   Text(_connected ? 'Disconnect' : 'Connect'),
                             ),
@@ -281,10 +267,10 @@ class _DoorRemoteState extends State<DoorRemote> {
                                       } else if (isOpen == false &&
                                           _connected == true) {
                                         return const Color.fromARGB(
-                                            255, 34, 226, 0);
+                                            255, 35, 191, 0);
                                       } else {
                                         return const Color.fromARGB(
-                                            255, 64, 125, 64);
+                                            255, 52, 99, 52);
                                       }
                                     }),
                                     fixedSize: MaterialStateProperty.all(
@@ -406,7 +392,43 @@ class _DoorRemoteState extends State<DoorRemote> {
     );
   }
 
-  // Create the List of devices to be shown in Dropdown Menu
+  Future<void> _displayPasswordInputDialog(BuildContext context) async {
+    TextEditingController passwordController = TextEditingController();
+    return showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            actionsAlignment: MainAxisAlignment.center,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                const Text("Enter bluetooth password:"),
+                TextField(
+
+                  controller: passwordController,
+                  decoration: const InputDecoration(labelText: 'Password'),
+                  obscureText: true,
+                )
+              ],
+            ),
+            actions: <Widget>[
+              ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      bluetoothPassword = passwordController.text;
+                    });
+                    _sendPasswordToBluetooth();
+                    print(bluetoothPassword);
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Check'))
+            ],
+          );
+        });
+  }
+
   List<DropdownMenuItem<BluetoothDevice>> _getDeviceItems() {
     List<DropdownMenuItem<BluetoothDevice>> items = [];
     if (_devicesList.isEmpty) {
@@ -424,7 +446,6 @@ class _DoorRemoteState extends State<DoorRemote> {
     return items;
   }
 
-  // Method to connect to bluetooth
   void _connect() async {
     setState(() {
       _isButtonUnavailable = true;
@@ -439,44 +460,44 @@ class _DoorRemoteState extends State<DoorRemote> {
         await BluetoothConnection.toAddress(_device.address)
             .then((_connection) {
           if (_device.address == "7C:9E:BD:39:C9:12") {
-            print(_device.address);
-            print('Connected to the device');
             show("Connected to the device");
             connection = _connection;
             setState(() {
               _connected = true;
             });
+            _displayPasswordInputDialog(context).then((value) {
+              // if (passwordCorrection == true) {
+              //   return;
+              // } else {
+              //   show("Wrong password entered, device disconnecting");
+              //   _connected = false;
+              // }
 
-            connection.input.listen(null).onDone(() {
-              if (isDisconnecting) {
-                show('Device disconnected locally');
-                print('Disconnecting locally!');
-                _connected = false;
-              } else {
-                show('Device disconnected remotely');
-                print('Disconnected remotely!');
-                _connected = false;
-              }
-              if (this.mounted) {
-                setState(() {});
-              }
+              connection.input.listen(null).onDone(() {
+                if (isDisconnecting) {
+                  show('Device disconnected locally');
+                  _connected = false;
+                } else {
+                  show('Device disconnected remotely');
+                  _connected = false;
+                }
+                if (this.mounted) {
+                  setState(() {});
+                }
+              });
             });
           } else {
             show("Wrong device selected!");
           }
         }).catchError((error) {
           show("Cannot connect to the device");
-          print('Cannot connect, exception occurred');
-          print(error);
         });
-        //show('Device connected');
 
         setState(() => _isButtonUnavailable = false);
       }
     }
   }
 
-  // Method to disconnect bluetooth
   void _disconnect() async {
     setState(() {
       _isButtonUnavailable = true;
@@ -493,10 +514,16 @@ class _DoorRemoteState extends State<DoorRemote> {
     }
   }
 
-  // Method to send message,
-  // for turning the Bluetooth device on
+  void _sendPasswordToBluetooth() async {
+    connection.output.add(utf8.encode(bluetoothPassword+"#\n"));
+    await connection.output.allSent;
+    // setState(() {
+    //   _deviceState = 0;
+    // });
+  }
+
   void _sendOnMessageToBluetooth() async {
-    connection.output.add(utf8.encode("1"));
+    connection.output.add(utf8.encode("1"+"\n"));
     await connection.output.allSent;
     show('Device Turned On');
     setState(() {
@@ -504,10 +531,8 @@ class _DoorRemoteState extends State<DoorRemote> {
     });
   }
 
-  // Method to send message,
-  // for turning the Bluetooth device off
   void _sendOffMessageToBluetooth() async {
-    connection.output.add(utf8.encode("0"));
+    connection.output.add(utf8.encode("0"+"\n"));
     await connection.output.allSent;
     show('Device Turned Off');
     setState(() {
@@ -515,14 +540,11 @@ class _DoorRemoteState extends State<DoorRemote> {
     });
   }
 
-  // Method to show a Snackbar,
-  // taking message as the text
   Future show(
     String message, {
     Duration duration: const Duration(seconds: 3),
   }) async {
     await Future.delayed(const Duration(milliseconds: 100));
-    //ScaffoldMessenger.
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(

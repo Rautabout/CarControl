@@ -71,6 +71,8 @@ class _GeoLocationState extends State<GeoLocation> {
             }
             return GoogleMap(
               mapType: MapType.terrain,
+
+
               markers: {
                 Marker(
                     position: LatLng(
@@ -78,7 +80,10 @@ class _GeoLocationState extends State<GeoLocation> {
                             (element) => element.id == 'coords')['lat'],
                         snapshot.data.docs.singleWhere(
                             (element) => element.id == 'coords')['lng']),
-                    markerId: const MarkerId('Car Location'))
+                    markerId: const MarkerId('Car Location'),
+
+
+                )
               },
               initialCameraPosition: CameraPosition(
                   target: LatLng(
